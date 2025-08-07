@@ -3,9 +3,9 @@ package fr.robotv2.placeholderannotationlib.impl;
 import fr.robotv2.placeholderannotationlib.api.PlaceholderActor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class PlaceholderActorImpl implements PlaceholderActor {
@@ -28,7 +28,7 @@ public class PlaceholderActorImpl implements PlaceholderActor {
         return (issuer instanceof Player && issuer.isOnline()) ? (Player) issuer : null;
     }
 
-    @Nonnull
+    @NotNull
     @Override
     public Player requireOnlinePlayer() {
         return Objects.requireNonNull(getOnlinePlayer(), "An online player is required for this placeholder.");

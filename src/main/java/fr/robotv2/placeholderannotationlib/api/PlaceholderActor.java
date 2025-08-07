@@ -3,9 +3,8 @@ package fr.robotv2.placeholderannotationlib.api;
 import fr.robotv2.placeholderannotationlib.impl.PlaceholderActorImpl;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface PlaceholderActor {
 
@@ -15,7 +14,7 @@ public interface PlaceholderActor {
     @Nullable
     Player getOnlinePlayer();
 
-    @Nonnull
+    @NotNull
     Player requireOnlinePlayer();
 
     static PlaceholderActor of(OfflinePlayer player) {

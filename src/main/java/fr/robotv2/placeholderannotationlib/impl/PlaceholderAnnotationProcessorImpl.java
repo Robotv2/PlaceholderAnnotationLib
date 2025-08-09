@@ -16,6 +16,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Collections;
+import java.util.Set;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -69,7 +71,7 @@ public class PlaceholderAnnotationProcessorImpl implements PlaceholderAnnotation
                 }
                 return defaultPlaceholder.process(player, new String[0]);
             }
-            return "";
+            return null;
         }
 
         String[] parts = params.split(Pattern.quote(separator()));
@@ -90,15 +92,19 @@ public class PlaceholderAnnotationProcessorImpl implements PlaceholderAnnotation
 
         if (matchedPlaceholder == null) {
             debug("No placeholder found for: " + params);
-            if (defaultPlaceholder != null) {
-                return defaultPlaceholder.process(player, parts); // ✅ Always call with all parts
+            if (defaultPlaceholder == null) {
+                return "";
             }
-            return "";
+
+            if (parts.length < 3) {
+                return "";
+            }
+            String[] argsForDefault = Arrays.copyOfRange(parts, parts.length - 2, parts.length);
+            return defaultPlaceholder.process(player, argsForDefault);
         }
 
-        // RequireOnlinePlayer check
         if (matchedPlaceholder.requiresOnlinePlayer()) {
-            if (!(player instanceof Player) || !((Player) player).isOnline()) {
+            if (!(player instanceof Player) || !player.isOnline()) {
                 debug("Placeholder requires online player: " + matchedId);
                 return "";
             }
@@ -125,6 +131,11 @@ public class PlaceholderAnnotationProcessorImpl implements PlaceholderAnnotation
         }
     }
 
+    @Override
+    public Set<String> registeredPlaceholders() {
+        return Collections.unmodifiableSet(placeholders.keySet());
+    }
+
     @SuppressWarnings("unchecked")
     public <T> ValueResolver<T> getValueResolver(Class<T> clazz) {
         return (ValueResolver<T>) resolvers.get(clazz);
@@ -140,12 +151,10 @@ public class PlaceholderAnnotationProcessorImpl implements PlaceholderAnnotation
 
         BasePlaceholder placeholderImpl;
 
-        if (accessible instanceof Field) {
-            Field field = (Field) accessible;
+        if (accessible instanceof Field field) {
             field.setAccessible(true);
             placeholderImpl = new FieldBasePlaceholderImpl(expansion, field, placeholder, isDefault);
-        } else if (accessible instanceof Method) {
-            Method method = (Method) accessible;
+        } else if (accessible instanceof Method method) {
             method.setAccessible(true);
             placeholderImpl = new MethodBasePlaceholderImpl(this, expansion, method, placeholder, isDefault);
         } else {

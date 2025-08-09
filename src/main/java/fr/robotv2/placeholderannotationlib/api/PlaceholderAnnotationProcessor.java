@@ -4,6 +4,7 @@ import fr.robotv2.placeholderannotationlib.impl.PlaceholderAnnotationProcessorIm
 import org.bukkit.OfflinePlayer;
 
 import java.util.logging.Logger;
+import java.util.Set;
 
 public interface PlaceholderAnnotationProcessor {
 
@@ -16,6 +17,8 @@ public interface PlaceholderAnnotationProcessor {
     <T> void registerValueResolver(Class<? extends T> tClass, ValueResolver<? extends T> resolver);
 
     void registerExpansion(BasePlaceholderExpansion expansion);
+
+    Set<String> registeredPlaceholders();
 
     class Builder {
 

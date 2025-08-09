@@ -1,23 +1,25 @@
 package fr.robotv2.placeholderannotationlib.impl;
 
+import fr.robotv2.placeholderannotationlib.annotations.Cache;
 import fr.robotv2.placeholderannotationlib.annotations.Optional;
 import fr.robotv2.placeholderannotationlib.annotations.Placeholder;
 import fr.robotv2.placeholderannotationlib.annotations.RequireOnlinePlayer;
 import fr.robotv2.placeholderannotationlib.api.BasePlaceholder;
 import fr.robotv2.placeholderannotationlib.api.BasePlaceholderExpansion;
 import fr.robotv2.placeholderannotationlib.api.PlaceholderActor;
+import fr.robotv2.placeholderannotationlib.util.CacheSystem;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Level;
 
-import java.lang.reflect.*;
 
 public class MethodBasePlaceholderImpl implements BasePlaceholder {
 
@@ -25,6 +27,7 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
     private final BasePlaceholderExpansion expansion;
     private final Method method;
     private final Placeholder placeholder;
+    private final Cache cacheAnnotation;
     private final boolean isDefault;
     private final boolean requiresOnline;
 
@@ -38,6 +41,7 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
         this.expansion = expansion;
         this.method = method;
         this.placeholder = placeholder;
+        this.cacheAnnotation = method.getAnnotation(Cache.class);
         this.isDefault = isDefault;
         this.requiresOnline = method.isAnnotationPresent(RequireOnlinePlayer.class);
     }
@@ -61,23 +65,43 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
     @Override
     public String process(OfflinePlayer player, String[] params) {
         PlaceholderActor actor = PlaceholderActor.of(player);
+
+        String cached = null;
+        String cacheKey = null;
+        if (cacheAnnotation != null && player != null) {
+            cacheKey = buildCacheKey(params);
+            cached = CacheSystem.INSTANCE.getCache(player.getUniqueId(), cacheKey);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
         Object[] resolvedParams = resolveParameters(actor, params);
         if (resolvedParams == null) {
-            return null; // Failed to resolve parameters
+            return null;
         }
-        return invoke(resolvedParams);
+
+        String result = invoke(resolvedParams);
+
+        if (result != null && cacheAnnotation != null && player != null) {
+            CacheSystem.INSTANCE.cache(player.getUniqueId(), cacheKey, result, cacheAnnotation);
+        }
+
+        return result;
     }
 
-    /**
-     * Resolves method parameters from the given placeholder arguments.
-     */
+    private String buildCacheKey(String[] params) {
+        String id = (placeholder != null && placeholder.value().length > 0)
+                ? String.join(processor.separator(), placeholder.value())
+                : method.getName();
+        return id + ":" + String.join(processor.separator(), params);
+    }
+
     private Object[] resolveParameters(PlaceholderActor actor, String[] params) {
         Class<?>[] paramTypes = method.getParameterTypes();
         Object[] resolved = new Object[paramTypes.length];
-
         int argIndex = 0;
 
-        // Handle PlaceholderActor injection
         if (paramTypes.length > 0 && PlaceholderActor.class.isAssignableFrom(paramTypes[0])) {
             resolved[0] = actor;
             paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
@@ -99,7 +123,7 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
             String value = (i < params.length) ? params[i] : null;
             Object resolvedValue = resolveSingleParam(actor, value, type, i + argIndex);
             if (resolvedValue == null && !isOptionalWithDefault(i + argIndex)) {
-                return null; // Missing required param
+                return null;
             }
             resolved[i + argIndex] = resolvedValue;
         }
@@ -107,9 +131,6 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
         return resolved;
     }
 
-    /**
-     * Resolves a single parameter, handling optional defaults.
-     */
     private Object resolveSingleParam(PlaceholderActor actor, String value, Class<?> type, int methodParamIndex) {
         if (value != null) {
             return safeParse(actor, value, type);
@@ -120,10 +141,6 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
             if (!opt.defaultParameter().isEmpty()) {
                 return safeParse(actor, opt.defaultParameter(), type);
             } else {
-                // No default provided, return literal "null" string if expecting String
-                if (type.equals(String.class)) {
-                    return "null";
-                }
                 return null;
             }
         }
@@ -132,9 +149,6 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
         return null;
     }
 
-    /**
-     * Resolves varargs into an array of the correct component type.
-     */
     private Object resolveVarargs(PlaceholderActor actor, String[] params, int startIndex, Class<?> componentType) {
         String[] remaining = Arrays.copyOfRange(params, startIndex, params.length);
         Object array = Array.newInstance(componentType, remaining.length);
@@ -147,40 +161,27 @@ public class MethodBasePlaceholderImpl implements BasePlaceholder {
         return array;
     }
 
-    /**
-     * Parses a single value into the target type, catching errors.
-     */
     private Object safeParse(PlaceholderActor actor, String value, Class<?> type) {
         try {
             return type.isEnum()
                     ? Enum.valueOf(type.asSubclass(Enum.class), value.toUpperCase())
-                    : Objects.requireNonNull(processor.getValueResolver(type))
-                    .resolve(actor, value);
+                    : Objects.requireNonNull(processor.getValueResolver(type)).resolve(actor, value);
         } catch (Exception e) {
-            processor.logger().log(Level.WARNING,
-                    "Failed to parse '" + value + "' as " + type.getSimpleName() +
-                            " in method " + method.getName(), e);
+            processor.logger().log(Level.WARNING, "Failed to parse '" + value + "' as " + type.getSimpleName() + " in method " + method.getName(), e);
             return null;
         }
     }
 
-    /**
-     * Invokes the method with resolved parameters.
-     */
     private String invoke(Object[] params) {
         try {
             Object result = method.invoke(expansion, params);
             return (result == null) ? null : result.toString();
         } catch (IllegalAccessException | InvocationTargetException e) {
-            processor.logger().log(Level.SEVERE,
-                    "Error invoking placeholder method: " + method.getName(), e);
+            processor.logger().log(Level.SEVERE, "Error invoking placeholder method: " + method.getName(), e);
             return null;
         }
     }
 
-    /**
-     * Checks if a parameter is optional with a default value.
-     */
     private boolean isOptionalWithDefault(int methodParamIndex) {
         Optional opt = getAnnotation(method, methodParamIndex, Optional.class);
         return opt != null && !opt.defaultParameter().isEmpty();

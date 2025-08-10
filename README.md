@@ -2,55 +2,120 @@
 
 A lightweight Java library for creating PlaceholderAPI expansions using annotations. This library simplifies the process of creating placeholders by using method and field annotations instead of manual string parsing.
 
+## How It Works
+
+The library's main goal is to replace verbose, hard-to-maintain `onPlaceholderRequest` methods with clean, dedicated, and self-documenting annotated methods.
+
+### **Before:** The Traditional Approach
+
+Without this library, you typically end up with a single large method full of `if/else` statements and manual string splitting to handle different placeholders.
+
+```java
+@Override
+public String onPlaceholderRequest(Player player, String params) {
+    if (params.equalsIgnoreCase("player_name")) {
+        return player.getName();
+    }
+    
+    if (params.equalsIgnoreCase("player_balance")) {
+        // Balance logic...
+        return "100.42";
+    }
+    
+    if (params.startsWith("player_stats_")) {
+        String[] parts = params.split("_");
+        if (parts.length == 3) {
+            String statType = parts[2];
+            // Logic to get stats...
+        }
+    }
+    
+    return null;
+}
+````
+
+### **After:** The Annotation-Based Approach
+
+With this library, each placeholder is a separate, clearly defined method. The code is organized, readable, and easier to debug.
+
+```java
+// Handles %myexpansion_player_name%
+@Placeholder({"player", "name"})
+public String getPlayerName(PlaceholderActor actor) {
+    return actor.getPlayer().getName();
+}
+
+// Handles %myexpansion_player_balance%
+@Placeholder({"player", "balance"})
+public double getBalance(PlaceholderActor actor) {
+    // Your balance logic here
+    return 100.42;
+}
+
+// Handles %myexpansion_player_stats_<stat_type>%
+@Placeholder({"player", "stats"})
+public int getStats(PlaceholderActor actor, String statType) {
+    // Logic to get stats...
+}
+```
+
+-----
+
 ## Features
 
-- 🏷️ **Annotation-based placeholders** - Define placeholders using `@Placeholder` on methods and fields
-- 🔧 **Type-safe parameter resolution** - Automatic conversion of string parameters to Java types
-- 🎯 **Optional parameters** - Support for optional parameters with default values
-- 📦 **Varargs support** - Handle variable number of arguments
-- ⚡ **Caching system** - Built-in caching with TTL support using `@Cache`
-- 🔒 **Online player requirements** - Restrict placeholders to online players only
-- 🎨 **Flexible configuration** - Customizable separators, logging, and value resolvers
-- 🧪 **Comprehensive testing** - Full test coverage with examples
+  - **🏷️ Annotation-based placeholders:** Define placeholders using `@Placeholder` on methods and fields.
+  - **🔧 Type-safe parameter resolution:** Automatic conversion of string parameters from the placeholder to Java types like `int`, `boolean`, `enum`, etc.
+  - **🎯 Optional parameters:** Support for optional placeholder parts with default values using `@Optional`.
+  - **📦 Varargs support:** Handle a variable number of arguments in your placeholder methods.
+  - **⚡ Caching system:** Built-in caching with Time-To-Live (TTL) support via the `@Cache` annotation.
+  - **🔒 Online player requirements:** Restrict placeholders to online players using `@RequireOnlinePlayer`.
+  - **🎨 Flexible configuration:** Customize separators, logging, and register custom value resolvers.
+
+-----
 
 ## Installation
 
+Add the JitPack repository and the library dependency to your build configuration.
+
 ### Maven
+
 ```xml
 <repositories>
-    <!-- Other repositories... -->
     <repository>
         <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
+        <url>[https://jitpack.io](https://jitpack.io)</url>
     </repository>
 </repositories>
 
 <dependencies>
-    <!-- Other dependencies... -->
     <dependency>
         <groupId>fr.robotv2</groupId>
         <artifactId>PlaceholderAnnotationLib</artifactId>
-        <version>[VERSION]</version>
-    </dependency>
+        <version>VERSION</version> </dependency>
 </dependencies>
 ```
 
 ### Gradle
+
 ```gradle
 repositories {
     // Other repositories...
-    maven { url = 'https://jitpack.io' }
+    maven { url = '[https://jitpack.io](https://jitpack.io)' }
 }
 
 dependencies {
     // Other dependencies...
-    implementation 'fr.robotv2:PlaceholderAnnotationLib:[VERSION]'
+    implementation 'fr.robotv2:PlaceholderAnnotationLib:VERSION' // Replace with the latest version
 }
 ```
 
+-----
+
 ## Quick Start
 
-### 1. Create Your Expansion Class
+### 1\. Create Your Expansion Class
+
+Extend `BasePlaceholderExpansion` and use annotations to define your placeholders.
 
 ```java
 public class MyExpansion extends BasePlaceholderExpansion {
@@ -59,151 +124,173 @@ public class MyExpansion extends BasePlaceholderExpansion {
         super(processor);
     }
     
-    @Placeholder({"max", "balance"}) // for %myexpansion_max_balance%
-    private final int maxBalance = 1000; // works with field for consistent value
+    // This field handles %myexpansion_max_balance%
+    @Placeholder({"max", "balance"})
+    private final int maxBalance = 1000;
     
-    @Placeholder({"player", "name"}) // for %myexpansion_player_name%
+    // This method handles %myexpansion_player_name%
+    @Placeholder({"player", "name"})
     public String getPlayerName(PlaceholderActor actor) {
         return actor.getPlayer().getName();
     }
     
-    @Placeholder({"player", "balance"}) // for %myexpansion_player_balance%
+    // This method handles %myexpansion_player_balance% and requires the player to be online
+    @Placeholder({"player", "balance"})
     @RequireOnlinePlayer
     public double getBalance(PlaceholderActor actor) {
         // Your balance logic here
         return 100.42;
     }
     
-    // PlaceholderAPI related methods ...
+    // --- Standard PlaceholderAPI Methods ---
     
     @Override
     public String getIdentifier() {
         return "myexpansion";
     }
 
-    ...
+    @Override
+    public String getAuthor() {
+        return "YourName";
+    }
+
+    @Override
+    public String getVersion() {
+        return "1.0.0";
+    }
 }
 ```
 
-### 2. Register Your Expansion
+### 2\. Register Your Expansion
+
+In your main plugin class, instantiate the `PlaceholderAnnotationProcessor` and your expansion, then register it.
 
 ```java
 public class MyPlugin extends JavaPlugin {
     
     @Override
     public void onEnable() {
-        // Create processor
+        // Create the processor with desired configuration
         PlaceholderAnnotationProcessor processor = new PlaceholderAnnotationProcessor.Builder()
-            .separator("_")
+            .separator('_')
             .debug(false)
             .build();
-        
+            
         // Register your expansion
         MyExpansion expansion = new MyExpansion(processor);
-        expansion.register(); // register your expansion with PlaceholderAPI
+        expansion.register(); // Registers the expansion with PlaceholderAPI
     }
 }
 ```
 
-### 3. Use Your Placeholders
+### 3\. Use Your Placeholders
 
-Your placeholders are now available in PlaceholderAPI:
-- `%myexpansion_max_balance%` → Returns the maximum balance
-- `%myexpansion_player_name%` → Returns player name
-- `%myexpansion_player_balance%` → Returns player balance (online players only)
+Your placeholders are now available through PlaceholderAPI:
+
+  - `%myexpansion_max_balance%` → Returns the value of the `maxBalance` field.
+  - `%myexpansion_player_name%` → Returns the player's name.
+  - `%myexpansion_player_balance%` → Returns the player's balance, only if they are online.
+
+-----
 
 ## Annotation Reference
 
 ### @Placeholder
-Defines a placeholder on a method or field.
+
+Defines a placeholder on a method or field. The string array defines the parts of the placeholder, which will be joined by the configured separator.
 
 ```java
+// Handles: %myexpansion_player_stats_kills%
 @Placeholder({"player", "stats", "kills"})
-public String getKills(PlaceholderActor actor) { ... }
+public String getKills(PlaceholderActor actor) { /* ... */ }
 
+// Handles: %myexpansion_player_stats_deaths%
 @Placeholder({"player", "stats", "deaths"})
-public String getDeaths(PlaceholderActor actor) { ... }
+public String getDeaths(PlaceholderActor actor) { /* ... */ }
 ```
 
-**Usage**: `%myexpansion_player_stats_kills%`
-
-**Usage**: `%myexpansion_player_stats_deaths%`
-
-
 ### @RequireOnlinePlayer
-Restricts placeholder to online players only.
+
+Restricts a placeholder to online players. If the player is offline, the placeholder will not be processed and will appear in its raw form.
 
 ```java
 @Placeholder({"player", "location"})
 @RequireOnlinePlayer
 public String getLocation(PlaceholderActor actor) {
-    Player player = actor.requireOnlinePlayer(); // will not throw an exception
+    // This call is safe; it will not throw a NullPointerException.
+    Player player = actor.requireOnlinePlayer();
     Location location = player.getLocation();
     return "X: " + location.getX() + ", Y: " + location.getY() + ", Z: " + location.getZ();
 }
 ```
 
 ### @Optional
-Marks method parameters as optional with default values.
+
+Marks a method parameter as optional and provides a default value if it is not supplied in the placeholder string.
 
 ```java
 @Placeholder({"player", "stats"})
 public String getStats(PlaceholderActor actor, 
-                      String statType, 
-                      @Optional(defaultParameter = "kills") String format) {
-    // statType is required, format defaults to "kills"
-    return statType + ": " + format;
+                       String statType, 
+                       @Optional(defaultParameter = "kills") String anotherParameter) {
+    // For %myexpansion_player_stats_deaths%: statType = "deaths", anotherParameter = "kills"
+    // For %myexpansion_player_stats_deaths_assists%: statType = "deaths", anotherParameter = "assists"
+    return statType + ": " + anotherParameter;
 }
 ```
 
-**Usage**: `%myexpansion_player_stats_kills%`
-**Usage**: `%myexpansion_player_stats%` (Same thing as `%myexpansion_player_stats_kills%`)
-
 ### @Cache
-Enables caching for expensive operations.
+
+Enables caching for the result of a method. This is useful for expensive operations that do not need to be re-calculated on every request.
 
 ```java
+// The result of this method will be cached for 30 seconds.
 @Placeholder({"server", "tps"})
 @Cache(value = 30, unit = TimeUnit.SECONDS)
 public double getTPS() {
-    // Expensive TPS calculation cached for 30 seconds
+    // Expensive TPS calculation that now runs at most once every 30 seconds.
     return calculateTPS();
 }
 ```
 
 ### @DefaultPlaceholder
-Handles unknown placeholders as a fallback.
+
+Defines a fallback method to be executed when a requested placeholder does not match any other defined placeholder.
 
 ```java
 @DefaultPlaceholder
 public String handleUnknown() {
-    return "Unknown placeholder. Please provide a valid placeholder.";
+    return "Unknown placeholder.";
 }
 ```
+
+-----
 
 ## Parameter Types
 
-The library automatically converts string parameters to Java types:
+The library automatically converts string segments from the placeholder into corresponding Java types for method parameters.
+
+Supported types include `String`, primitives (`int`, `double`, etc.), primitive wrappers (`Integer`, `Double`, etc.), `boolean`, `enum` types, and `String...` (varargs).
+
+**Example:**
+For a placeholder like `%myexpansion_player_give_item_DIAMOND_64_true_Shiny_Precious%`
 
 ```java
 @Placeholder({"player", "give", "item"})
-public String giveItem(PlaceholderActor actor, 
-                      String itemName,      // String
-                      int amount,           // Integer
-                      boolean silent,       // Boolean
-                      double price,         // Double
-                      Material material,    // Enum
-                      String... lore) {     // Varargs
-    // Implementation
-    return "Gave " + amount + " " + itemName;
+public String giveItem(PlaceholderActor actor,
+                       Material material,   // "DIAMOND" is resolved to Material.DIAMOND
+                       int amount,          // "64" is parsed to an int
+                       boolean silent,      // "true" is parsed to a boolean
+                       String... lore) {    // "Shiny", "Precious" become a String array
+    
+    // Implementation...
+    return "Gave " + amount + " " + material.name();
 }
 ```
 
-**Usage**: `%myexpansion_player_give_item_diamond_64_true_100.5_DIAMOND_Shiny_Precious%`
-
 ## Field Placeholders
 
-You can also use fields as placeholders:
+You can use `@Placeholder` on fields for values that are constant or do not require logic to compute.
 
 ```java
 public class MyExpansion extends BasePlaceholderExpansion {
@@ -212,8 +299,9 @@ public class MyExpansion extends BasePlaceholderExpansion {
     private final String serverVersion = "1.20.1";
     
     @Placeholder({"plugin", "name"})
-    @RequireOnlinePlayer
     private String pluginName = "MyAwesomePlugin";
+    
+    // ...
 }
 ```
 
@@ -221,27 +309,32 @@ public class MyExpansion extends BasePlaceholderExpansion {
 
 ### Custom Value Resolvers
 
-Register custom type converters:
+You can register your own converters for custom types.
 
 ```java
+// In your onEnable method, configure the processor:
 processor.registerValueResolver(UUID.class, (actor, value) -> {
     try {
         return UUID.fromString(value);
     } catch (IllegalArgumentException e) {
-        return actor.getPlayer().getUniqueId(); // Fallback to player UUID
+        // Fallback to the player's UUID if the parameter is invalid or missing.
+        return actor.getPlayer().getUniqueId();
     }
 });
 ```
 
+-----
+
 ## Requirements
 
-- Java 8+
-- Bukkit/Spigot/Paper
-- PlaceholderAPI
+  - Java 8+
+  - Bukkit/Spigot/Paper
+  - PlaceholderAPI
 
 ## Support
 
-If you encounter any issues or have questions:
-- Open an issue on GitHub
-- Check the examples in the test directory
-- Enable debug mode for detailed logging
+  - Open an issue on GitHub for bugs or feature requests.
+  - Review the examples in the `test` directory of the project repository.
+  - Enable debug mode (`.debug(true)`) in the processor builder for detailed logging.
+
+<!-- end list -->

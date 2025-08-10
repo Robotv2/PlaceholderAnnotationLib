@@ -1,6 +1,6 @@
 # PlaceholderAnnotationLib
 
-A lightweight Java library for creating PlaceholderAPI expansions using annotations. This library simplifies the process of creating placeholders by using method and field annotations instead of manual string parsing.
+A **VERY lightweight** Java library for creating PlaceholderAPI expansions using annotations. This library simplifies the process of creating placeholders by using method and field annotations instead of manual string parsing.
 
 ## How It Works
 
@@ -52,9 +52,9 @@ public double getBalance(PlaceholderActor actor) {
     return 100.42;
 }
 
-// Handles %myexpansion_player_stats_<stat_type>%
+// Handles %myexpansion_player_stats_<stat-type>_<position>%
 @Placeholder({"player", "stats"})
-public int getStats(PlaceholderActor actor, String statType) {
+public int getStats(PlaceholderActor actor, String statType, int position) {
     // Logic to get stats...
 }
 ```

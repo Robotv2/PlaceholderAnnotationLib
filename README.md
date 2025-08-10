@@ -64,7 +64,7 @@ public int getStats(PlaceholderActor actor, String statType, int position) {
 ## Features
 
   - **🏷️ Annotation-based placeholders:** Define placeholders using `@Placeholder` on methods and fields.
-  - **⚡ **SUPER** Ligthweight: Only **22Ko** added to your project
+  - **⚡ SUPER Ligthweight:** Only **22Ko** added to your project
   - **🔧 Type-safe parameter resolution:** Automatic conversion of string parameters from the placeholder to Java types like `int`, `boolean`, `enum`, etc.
   - **🎯 Optional parameters:** Support for optional placeholder parts with default values using `@Optional`.
   - **📦 Varargs support:** Handle a variable number of arguments in your placeholder methods.

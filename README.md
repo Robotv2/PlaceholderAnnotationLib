@@ -84,7 +84,7 @@ Add the JitPack repository and the library dependency to your build configuratio
 <repositories>
     <repository>
         <id>jitpack.io</id>
-        <url>[https://jitpack.io](https://jitpack.io)</url>
+        <url>https://jitpack.io</url>
     </repository>
 </repositories>
 
@@ -92,7 +92,8 @@ Add the JitPack repository and the library dependency to your build configuratio
     <dependency>
         <groupId>fr.robotv2</groupId>
         <artifactId>PlaceholderAnnotationLib</artifactId>
-        <version>VERSION</version> </dependency>
+        <version>VERSION</version>
+    </dependency>
 </dependencies>
 ```
 
@@ -101,7 +102,7 @@ Add the JitPack repository and the library dependency to your build configuratio
 ```gradle
 repositories {
     // Other repositories...
-    maven { url = '[https://jitpack.io](https://jitpack.io)' }
+    maven { url = 'https://jitpack.io' }
 }
 
 dependencies {

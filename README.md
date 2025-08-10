@@ -61,16 +61,8 @@ public class MyExpansion extends BasePlaceholderExpansion {
     public String getIdentifier() {
         return "myexpansion";
     }
-    
-    @Override
-    public String getAuthor() {
-        return "YourName";
-    }
-    
-    @Override
-    public String getVersion() {
-        return "1.0.0";
-    }
+
+    ...
 }
 ```
 
@@ -82,16 +74,14 @@ public class MyPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         // Create processor
-        PlaceholderAnnotationProcessor processor = new PlaceholderAnnotationProcessorImpl.Builder()
+        PlaceholderAnnotationProcessor processor = new PlaceholderAnnotationProcessor.Builder()
             .separator("_")
             .debug(false)
             .build();
         
         // Register your expansion
-        processor.registerExpansion(new MyExpansion(processor));
-        
-        // Register with PlaceholderAPI
-        new MyExpansion(processor).register();
+        MyExpansion expansion = new MyExpansion(processor);
+        expansion.register(); // register your expansion with PlaceholderAPI
     }
 }
 ```

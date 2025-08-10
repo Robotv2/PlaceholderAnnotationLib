@@ -10,6 +10,7 @@ public abstract class BasePlaceholderExpansion extends PlaceholderExpansion {
 
     protected BasePlaceholderExpansion(PlaceholderAnnotationProcessor processor) {
         this.processor = processor;
+        processor.registerExpansion(this);
     }
 
     @Override

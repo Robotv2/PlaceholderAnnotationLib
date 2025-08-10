@@ -17,16 +17,35 @@ A lightweight Java library for creating PlaceholderAPI expansions using annotati
 
 ### Maven
 ```xml
-<dependency>
-    <groupId>fr.robotv2</groupId>
-    <artifactId>PlaceholderAnnotationLib</artifactId>
-    <version>1.0.0</version>
-</dependency>
+<repositories>
+    <!-- Other repositories... -->
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <!-- Other dependencies... -->
+    <dependency>
+        <groupId>fr.robotv2</groupId>
+        <artifactId>PlaceholderAnnotationLib</artifactId>
+        <version>[VERSION]</version>
+    </dependency>
+</dependencies>
 ```
 
 ### Gradle
 ```gradle
-implementation 'fr.robotv2:PlaceholderAnnotationLib:1.0.0'
+repositories {
+    // Other repositories...
+    maven { url = 'https://jitpack.io' }
+}
+
+dependencies {
+    // Other dependencies...
+    implementation 'fr.robotv2:PlaceholderAnnotationLib:[VERSION]'
+}
 ```
 
 ## Quick Start
@@ -99,16 +118,15 @@ Your placeholders are now available in PlaceholderAPI:
 Defines a placeholder on a method or field.
 
 ```java
-// String array syntax
 @Placeholder({"player", "stats", "kills"})
 public String getKills(PlaceholderActor actor) { ... }
 
-// Single element array
 @Placeholder({"player", "stats", "deaths"})
 public String getDeaths(PlaceholderActor actor) { ... }
 ```
 
 **Usage**: `%myexpansion_player_stats_kills%`
+
 **Usage**: `%myexpansion_player_stats_deaths%`
 
 
@@ -147,7 +165,7 @@ Enables caching for expensive operations.
 ```java
 @Placeholder({"server", "tps"})
 @Cache(value = 30, unit = TimeUnit.SECONDS)
-public double getTPS(PlaceholderActor actor) {
+public double getTPS() {
     // Expensive TPS calculation cached for 30 seconds
     return calculateTPS();
 }
@@ -158,7 +176,7 @@ Handles unknown placeholders as a fallback.
 
 ```java
 @DefaultPlaceholder
-public String handleUnknown(PlaceholderActor actor) {
+public String handleUnknown() {
     return "Unknown placeholder. Please provide a valid placeholder.";
 }
 ```
@@ -168,7 +186,7 @@ public String handleUnknown(PlaceholderActor actor) {
 The library automatically converts string parameters to Java types:
 
 ```java
-@Placeholder({"player", "give_item"})
+@Placeholder({"player", "give", "item"})
 public String giveItem(PlaceholderActor actor, 
                       String itemName,      // String
                       int amount,           // Integer

@@ -125,4 +125,78 @@ public class PlaceholderProcessorTest {
         String result = processor.process(mockOfflinePlayer, "varargs_test_single_1_only");
         assertEquals("single:1:only", result);
     }
+
+    @Test
+    public void testRegisterDirectBasic() {
+        processor.registerDirect("direct_test", actor -> "Direct placeholder result");
+        
+        String result = processor.process(mockOfflinePlayer, "direct_test");
+        assertEquals("Direct placeholder result", result);
+    }
+
+    @Test
+    public void testRegisterDirectWithPlayerData() {
+        processor.registerDirect("direct_player", actor -> "Player: " + actor.getPlayer().getName());
+        
+        String result = processor.process(mockOfflinePlayer, "direct_player");
+        assertEquals("Player: Steve", result);
+    }
+
+    @Test
+    public void testRegisterDirectCaseInsensitive() {
+        processor.registerDirect("Direct_Case_Test", actor -> "Case insensitive works");
+        
+        String result = processor.process(mockOfflinePlayer, "DIRECT_CASE_TEST");
+        assertEquals("Case insensitive works", result);
+    }
+
+    @Test
+    public void testRegisterDirectNullParams() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            processor.registerDirect(null, actor -> "Should fail");
+        });
+    }
+
+    @Test
+    public void testRegisterDirectEmptyParams() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            processor.registerDirect("", actor -> "Should fail");
+        });
+    }
+
+    @Test
+    public void testRegisterDirectNullFunction() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            processor.registerDirect("test", null);
+        });
+    }
+
+    @Test
+    public void testRegisterDirectOverridesAnnotationPlaceholder() {
+        // First register direct placeholder that overrides existing annotation-based one
+        processor.registerDirect("field_value", actor -> "Direct override");
+        
+        String result = processor.process(mockOfflinePlayer, "field_value");
+        assertEquals("Direct override", result);
+    }
+
+    @Test
+    public void testDirectPlaceholderInRegisteredList() {
+        processor.registerDirect("list_test", actor -> "Listed");
+        
+        assertTrue(processor.registeredPlaceholders().contains("list_test"));
+    }
+
+    @Test
+    public void testRegisterDirectWithOnlinePlayerRequirement() {
+        processor.registerDirect("online_only", actor -> "Online player: " + actor.getPlayer().getName(), true);
+        
+        // Test with offline player - should return empty string
+        String resultOffline = processor.process(mockOfflinePlayer, "online_only");
+        assertEquals("", resultOffline);
+        
+        // Test with online player - should work
+        String resultOnline = processor.process(mockOnlinePlayer, "online_only");
+        assertEquals("Online player: Alex", resultOnline);
+    }
 }

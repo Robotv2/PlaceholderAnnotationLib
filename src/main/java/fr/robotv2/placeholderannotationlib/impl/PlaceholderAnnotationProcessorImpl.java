@@ -4,6 +4,7 @@ import fr.robotv2.placeholderannotationlib.annotations.DefaultPlaceholder;
 import fr.robotv2.placeholderannotationlib.annotations.Placeholder;
 import fr.robotv2.placeholderannotationlib.api.BasePlaceholder;
 import fr.robotv2.placeholderannotationlib.api.BasePlaceholderExpansion;
+import fr.robotv2.placeholderannotationlib.api.PlaceholderActor;
 import fr.robotv2.placeholderannotationlib.api.PlaceholderAnnotationProcessor;
 import fr.robotv2.placeholderannotationlib.api.ValueResolver;
 import org.bukkit.Bukkit;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.Collections;
 import java.util.Set;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -129,6 +131,31 @@ public class PlaceholderAnnotationProcessorImpl implements PlaceholderAnnotation
         for (Field field : expansion.getClass().getDeclaredFields()) {
             processAccessible(expansion, field);
         }
+    }
+
+    @Override
+    public void registerDirect(String params, Function<PlaceholderActor, String> function) {
+        registerDirect(params, function, false);
+    }
+
+    @Override
+    public void registerDirect(String params, Function<PlaceholderActor, String> function, boolean requiresOnlinePlayer) {
+        if (params == null || params.isEmpty()) {
+            throw new IllegalArgumentException("Params cannot be null or empty");
+        }
+        if (function == null) {
+            throw new IllegalArgumentException("Function cannot be null");
+        }
+
+        String normalizedParams = params.toLowerCase();
+        debug("Registering direct placeholder: " + normalizedParams);
+
+        if (placeholders.containsKey(normalizedParams)) {
+            logger.warning("Duplicate placeholder id: " + normalizedParams);
+        }
+
+        BasePlaceholder directPlaceholder = new DirectPlaceholderImpl(function, requiresOnlinePlayer);
+        placeholders.put(normalizedParams, directPlaceholder);
     }
 
     @Override

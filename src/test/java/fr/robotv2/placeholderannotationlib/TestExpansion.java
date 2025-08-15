@@ -1,16 +1,18 @@
 package fr.robotv2.placeholderannotationlib;
 
-import fr.robotv2.placeholderannotationlib.annotations.Cache;
-import fr.robotv2.placeholderannotationlib.annotations.DefaultPlaceholder;
-import fr.robotv2.placeholderannotationlib.annotations.Optional;
-import fr.robotv2.placeholderannotationlib.annotations.Placeholder;
-import fr.robotv2.placeholderannotationlib.annotations.RequireOnlinePlayer;
+import fr.robotv2.placeholderannotationlib.annotations.*;
 import fr.robotv2.placeholderannotationlib.api.BasePlaceholderExpansion;
 import fr.robotv2.placeholderannotationlib.api.PlaceholderActor;
 import fr.robotv2.placeholderannotationlib.api.PlaceholderAnnotationProcessor;
-import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.TimeUnit;
 
+@Expansion(
+        identifier = "testexpansion",
+        version = "1.0.0",
+        author = "Robotv2",
+        persist = true
+)
 public class TestExpansion extends BasePlaceholderExpansion {
 
     private int cachedCalls = 0;
@@ -73,20 +75,5 @@ public class TestExpansion extends BasePlaceholderExpansion {
     @Placeholder({"varargs", "test"})
     public String varargsTest(PlaceholderActor actor, String prefix, int count, String... items) {
         return prefix + ":" + count + ":" + String.join(",", items);
-    }
-
-    @Override
-    public @NotNull String getIdentifier() {
-        return "testexpansion";
-    }
-
-    @Override
-    public @NotNull String getAuthor() {
-        return "RobotV2";
-    }
-
-    @Override
-    public @NotNull String getVersion() {
-        return "1.0.0";
     }
 }

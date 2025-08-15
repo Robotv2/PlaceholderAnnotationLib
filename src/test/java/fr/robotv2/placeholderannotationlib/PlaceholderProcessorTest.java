@@ -22,7 +22,7 @@ public class PlaceholderProcessorTest {
     @BeforeEach
     public void setup() {
         processor = new PlaceholderAnnotationProcessorImpl("_", Logger.getLogger("Test"), false);
-        processor.registerExpansion(new TestExpansion(processor));
+        new TestExpansion(processor);
 
         mockOfflinePlayer = mock(OfflinePlayer.class);
         when(mockOfflinePlayer.getName()).thenReturn("Steve");

@@ -11,6 +11,10 @@ public interface BasePlaceholder {
 
     boolean isDefault();
 
+    default boolean isDirect() {
+        return false;
+    }
+
     boolean requiresOnlinePlayer();
 
     String process(OfflinePlayer player, String[] params);

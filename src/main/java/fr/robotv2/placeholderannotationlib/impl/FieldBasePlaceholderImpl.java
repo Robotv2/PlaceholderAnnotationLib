@@ -32,7 +32,6 @@ public class FieldBasePlaceholderImpl implements BasePlaceholder {
     }
 
     @Override
-    @Nullable("May return null if the placeholder is the default placeholder. Check isDefault() first.")
     public Placeholder getPlaceholder() {
         return placeholder;
     }

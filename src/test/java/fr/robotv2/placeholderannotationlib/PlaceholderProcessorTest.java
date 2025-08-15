@@ -189,7 +189,7 @@ public class PlaceholderProcessorTest {
 
     @Test
     public void testRegisterDirectWithOnlinePlayerRequirement() {
-        processor.registerDirect("online_only", actor -> "Online player: " + actor.getPlayer().getName(), true);
+        processor.registerDirect("online_only", actor -> "Online player: " + actor.requireOnlinePlayer().getName(), true);
         
         // Test with offline player - should return empty string
         String resultOffline = processor.process(mockOfflinePlayer, "online_only");

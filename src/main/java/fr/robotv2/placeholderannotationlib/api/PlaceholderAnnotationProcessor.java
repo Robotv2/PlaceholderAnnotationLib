@@ -54,4 +54,8 @@ public interface PlaceholderAnnotationProcessor {
             return new PlaceholderAnnotationProcessorImpl(separator, logger, debug);
         }
     }
+
+    static PlaceholderAnnotationProcessor defaultProcessor() {
+        return new Builder().build();
+    }
 }
